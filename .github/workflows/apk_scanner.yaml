@@ -78,7 +78,7 @@ jobs:
         docker run -v ${pwd}:/home/mobsf/Mobile-Security-Framework-MobSF/uploads -i opensecurity/mobile-security-framework-mobsf:latest /home/mobsf/Mobile-Security-Framework-MobSF/uploads/${{ env.APK_PATH }} -o /home/mobsf/Mobile-Security-Framework-MobSF/uploads/reports/mobsf_report.json
 
     - name: Upload reports
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: security-reports
         path: reports/
