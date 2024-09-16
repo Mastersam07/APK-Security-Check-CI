@@ -1,0 +1,63 @@
+name: Android APK Security Scan
+
+
+on:
+  push:
+qark    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  APK_PATH: "app-release.apk"
+
+jobs:
+  security_scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install qark apkleaks
+        git clone https://github.com/AndroBugs/AndroBugs_Framework.git
+
+    - name: Install MobSF
+      run: |
+        docker pull opensecurity/mobile-security-framework-mobsf:latest
+
+    - name: Prepare reports directory
+      run: |
+        mkdir -p reports
+
+    - name: Run QARK
+      run: |
+        qark --apk ${{ env.APK_PATH }} --report-type json
+        mkdir -p reports/qark
+        mv qark_report.json reports/qark/
+
+    - name: Run APKLeaks
+      run: |
+        apkleaks -f ${{ env.APK_PATH }} -o reports/apkleaks_report.json
+
+    - name: Run AndroBugs
+      run: |
+        mkdir -p reports/androbugs
+        python AndroBugs_Framework/androbugs.py -f ${{ env.APK_PATH }} -o reports/androbugs_report
+
+    - name: Run MobSF
+      run: |
+        docker run -v ${PWD}:/home/mobsf/Mobile-Security-Framework-MobSF/uploads -i opensecurity/mobile-security-framework-mobsf:latest /home/mobsf/Mobile-Security-Framework-MobSF/uploads/${{ env.APK_PATH }} -o /home/mobsf/Mobile-Security-Framework-MobSF/uploads/reports/mobsf_report.json
+
+    - name: Upload reports
+      uses: actions/upload-artifact@v2
+      with:
+        name: security-reports
+        path: reports/
+        retention-days: 5
