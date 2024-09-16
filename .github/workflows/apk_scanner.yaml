@@ -8,7 +8,8 @@ on:
     branches: [ main ]
 
 env:
-  APK_PATH: "build/app/outputs/flutter-apk/app-release.apk"
+  apk_path: "build/app/outputs/flutter-apk/app-release.apk"
+  flutter_version: "3.24.2"
 
 jobs:
   security_scan:
@@ -20,7 +21,8 @@ jobs:
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: 'stable'
+        flutter-version: ${{ env.flutter_version }}
+        channel: 'stable'
         cache: true
         cache-key: flutter-sdk-${{ runner.os }}-v3
         pub-cache-key:
@@ -60,22 +62,22 @@ jobs:
 
     - name: Run QARK
       run: |
-        qark --apk ${{ env.APK_PATH }} --report-type json
+        qark --apk ${{ env.apk_path }} --report-type json
         mkdir -p reports/qark
         mv qark_report.json reports/qark/
 
     - name: Run APKLeaks
       run: |
-        apkleaks -f ${{ env.APK_PATH }} -o reports/apkleaks_report.json
+        apkleaks -f ${{ env.apk_path }} -o reports/apkleaks_report.json
 
     - name: Run AndroBugs
       run: |
         mkdir -p reports/androbugs
-        python AndroBugs_Framework/androbugs.py -f ${{ env.APK_PATH }} -o reports/androbugs_report
+        python AndroBugs_Framework/androbugs.py -f ${{ env.apk_path }} -o reports/androbugs_report
 
     - name: Run MobSF
       run: |
-        docker run -v ${pwd}:/home/mobsf/Mobile-Security-Framework-MobSF/uploads -i opensecurity/mobile-security-framework-mobsf:latest /home/mobsf/Mobile-Security-Framework-MobSF/uploads/${{ env.APK_PATH }} -o /home/mobsf/Mobile-Security-Framework-MobSF/uploads/reports/mobsf_report.json
+        docker run -v ${pwd}:/home/mobsf/Mobile-Security-Framework-MobSF/uploads -i opensecurity/mobile-security-framework-mobsf:latest /home/mobsf/Mobile-Security-Framework-MobSF/uploads/${{ env.apk_path }} -o /home/mobsf/Mobile-Security-Framework-MobSF/uploads/reports/mobsf_report.json
 
     - name: Upload reports
       uses: actions/upload-artifact@v3
