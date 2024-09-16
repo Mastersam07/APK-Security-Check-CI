@@ -3,7 +3,7 @@ name: Android APK Security Scan
 
 on:
   push:
-qark    branches: [ main ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
